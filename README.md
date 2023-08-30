@@ -20,3 +20,23 @@ Enter the Organization: egg corp
 Enter the Organizational Unit: cyber egg
 Enter the Email Address: admin@egg.com
 ```
+
+On the windows machine you will need to install a few tools before running the script.
+
+Install sudo via scoop
+
+```powershell
+scoop install sudo
+```
+
+Install chocolatey - https://chocolatey.org/install
+
+Install openssl
+
+```powershell
+sudo choco install openssl
+```
+
+```powershell
+.\generateCsrWinHost.ps1
+```
