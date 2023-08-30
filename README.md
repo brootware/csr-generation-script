@@ -1,5 +1,6 @@
 # csr-generation-script
-Bash &amp; PowerShell scripts to automate generation of certificate signing request on servers.
+
+Bash &amp; PowerShell scripts to automate the generation of certificate signing request on servers.
 
 ## Example usage
 
