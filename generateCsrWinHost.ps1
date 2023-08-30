@@ -1,18 +1,52 @@
-# Define the variables for the CSR
-$CommonName = "example.com"
-$Country = "US"
-$State = "California"
-$City = "Los Angeles"
-$Organization = "Example Organization"
-$Department = "IT"
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$HostName = $(Throw "Error: No hostname argument provided. Usage: Provide a hostname as an argument."),
+    [Parameter(Mandatory=$true)]
+    [string]$domain = $(Throw "Error: No domain name argument provided. Usage: Provide a domain name as an argument."),
+    [Parameter(Mandatory=$true)]
+    [string]$Ip = $(Throw "Error: No Ip address argument provided. Usage: Provide an Ip address as an argument.")
+)
 
-# Generate a new private key
-$PrivateKey = New-SelfSignedCertificate -CertStoreLocation cert:\LocalMachine\My -DnsName $CommonName -KeyExportPolicy Exportable -KeyUsage DigitalSignature -Type DocumentEncryptionCert -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider"
+$HOSTNAME = $Hostname
+$DOMAIN = $Domain
+$FQDN = "$HOSTNAME.$DOMAIN"
+$IP = $Ip
 
-# Create a certificate request using the private key
-$CSR = New-CertificateRequest -CertReq -Subject "CN=$CommonName, C=$Country, S=$State, L=$City, O=$Organization, OU=$Department" -KeySpec KeyExchange -HashAlgorithm SHA256 -KeyExportPolicy Exportable -KeyAlgorithm RSA -KeyLength 2048 -PrivateKey $PrivateKey
+# Create a directory to contain all the artifacts generated
+mkdir $HOSTNAME
 
-# Save the CSR to a file
-$CSR | Set-Content -Path "C:\path\to\csr.csr" -Encoding ASCII
+# Generate a private key for generating CSR
+$CreatePrivateKey = "openssl genrsa -out .\$HOSTNAME\$FQDN.key 2048"
+Invoke-Expression $CreatePrivateKey
 
-Write-Host "Certificate Signing Request (CSR) generated successfully."
+# Create CSR Configuration file
+$CsrConf = @"
+[ req ]
+default_bits = 2048
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
+
+[ dn ]
+C = SG
+ST = SG
+L = SG
+O = egg
+OU = $HOSTNAME
+CN = $FQDN
+emalAddress = admin@$DOMAIN
+
+[ req_ext ]
+subjectAltNames = @alt_names
+
+[ alt_names ]
+DNS.1 = $FQDN
+IP.1 = $IP
+"@
+
+Set-Content -Path .\$HOSTNAME\csr.conf -Value $CsrConf
+
+# Create CSR using private key
+$CreateCsr = "openssl req -new -key .\$HOSTNAME\$FQDN.key -out .\$HOSTNAME\$FQDN.csr -config .\$HOSTNAME\csr.conf"
+Invoke-Expression $CreateCsr
